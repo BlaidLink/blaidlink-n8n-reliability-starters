@@ -1,0 +1,202 @@
+{
+  "id": "5f7fc571-4cd7-48ea-839a-30a907f16ea9",
+  "name": "Detect Website Content Changes and Create a Structured Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Website change monitor\nCompare a saved page snapshot with newly fetched text and emit a compact, structured change record.\n\nThe default demo is completely local: it compares two fictional product-page snapshots, makes no network request, and needs no credentials.",
+        "height": 245,
+        "width": 460,
+        "color": 5
+      },
+      "id": "ff447b12-e400-4c58-9f67-b1ba7fc97724",
+      "name": "Template Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -290
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "bc230199-c673-43ca-b7ea-d65722de6d3a",
+      "name": "Run Change Demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        70
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "64bbd36d-bf36-4ab7-9064-3a34daf56722",
+              "name": "page_label",
+              "value": "Sample pricing page",
+              "type": "string"
+            },
+            {
+              "id": "6f5d0a35-0529-4655-817a-7523c08cfd10",
+              "name": "page_url",
+              "value": "https://example.com/pricing",
+              "type": "string"
+            },
+            {
+              "id": "ad9156ee-69db-41dd-b282-b430bf2d5d4d",
+              "name": "previous_text",
+              "value": "Starter plan $19 per month. Includes 5 workflows and email support.",
+              "type": "string"
+            },
+            {
+              "id": "d057a82e-6202-4e2f-8a4b-680d86bff93a",
+              "name": "current_text",
+              "value": "Starter plan $24 per month. Includes 10 workflows and priority email support.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d539b50f-87ed-4cc6-aa67-aa46478f7b17",
+      "name": "Set Sample Snapshots",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -390,
+        70
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();\nconst tokenize = (value) => new Set(normalize(value).toLowerCase().match(/[a-z0-9$%.-]+/g) || []);\nconst fingerprint = (value) => {\n  let hash = 2166136261;\n  for (const char of normalize(value)) {\n    hash ^= char.charCodeAt(0);\n    hash = Math.imul(hash, 16777619);\n  }\n  return (hash >>> 0).toString(16).padStart(8, '0');\n};\n\nconst before = normalize(input.previous_text);\nconst after = normalize(input.current_text);\nif (!before || !after) throw new Error('Both previous_text and current_text are required.');\n\nconst beforeTokens = tokenize(before);\nconst afterTokens = tokenize(after);\nconst added = [...afterTokens].filter((token) => !beforeTokens.has(token)).slice(0, 12);\nconst removed = [...beforeTokens].filter((token) => !afterTokens.has(token)).slice(0, 12);\nconst changed = before !== after;\nconst deltaSize = added.length + removed.length;\n\nreturn [{\n  json: {\n    page_label: String(input.page_label || 'Unlabeled page'),\n    page_url: String(input.page_url || ''),\n    status: changed ? 'changed' : 'unchanged',\n    previous_fingerprint: fingerprint(before),\n    current_fingerprint: fingerprint(after),\n    added_terms: added,\n    removed_terms: removed,\n    change_size: deltaSize === 0 ? 'none' : deltaSize <= 3 ? 'small' : deltaSize <= 8 ? 'medium' : 'large',\n    alert_summary: changed\n      ? `${input.page_label || 'Page'} changed: ${added.length} added term(s), ${removed.length} removed term(s).`\n      : `${input.page_label || 'Page'} has no normalized text change.`,\n    checked_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "e945bc2b-e424-4ba1-a88f-e4a60bedec73",
+      "name": "Compare Snapshots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -110,
+        70
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "82f26719-9b9a-49bb-8d16-0bb7de1941c2",
+      "name": "Structured Change Result",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        180,
+        10
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($input.first().json?.error?.message || $input.first().json?.message || 'The snapshots could not be compared.');\nreturn [{ json: { status: 'failed', message: raw.slice(0, 180), next_step: 'Confirm that both snapshot fields contain extracted page text, then retry.' } }];"
+      },
+      "id": "ac62403c-5869-44ce-808f-92dbed26b99f",
+      "name": "Create Comparison Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "291a47a5-84da-44ee-b1d8-50380640de94",
+      "name": "Comparison Failed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        450,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Connect a real page safely\n1. Fetch only pages you are authorized to monitor and respect site terms and rate limits.\n2. Extract the meaningful text before **Compare Snapshots**; ignore timestamps and rotating IDs where possible.\n3. Load the prior snapshot from a data store, then save the current snapshot after a successful comparison.\n4. Notify only when `status` is `changed`; add an IF node before email or chat delivery.\n5. Never place session cookies, tokens, or private page content in a public template or alert.",
+        "height": 300,
+        "width": 470,
+        "color": 4
+      },
+      "id": "a29a4bea-9186-4139-9878-d37dbe56cb96",
+      "name": "Production Checklist",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        -330
+      ]
+    }
+  ],
+  "connections": {
+    "Run Change Demo": {
+      "main": [
+        [
+          {
+            "node": "Set Sample Snapshots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Sample Snapshots": {
+      "main": [
+        [
+          {
+            "node": "Compare Snapshots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Snapshots": {
+      "main": [
+        [
+          {
+            "node": "Structured Change Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Comparison Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Comparison Failure": {
+      "main": [
+        [
+          {
+            "node": "Comparison Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e5ec9ca3-067a-44db-a747-9f87d75b796b",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "tags": []
+}

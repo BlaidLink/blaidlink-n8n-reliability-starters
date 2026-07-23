@@ -1,0 +1,226 @@
+{
+  "id": "1fe47f77-7351-4e85-a596-16e20fd617c5",
+  "name": "Score Automation Leads and Generate a Scope-Safe Next Step",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Automation lead intake scorer\nUse a few concrete intake answers to produce a transparent fit score, a delivery-risk score, and the safest next sales step.\n\n**Default demo:** a fictional lead with no private data. Change only the fields in **Set Sample Lead** before adapting the workflow to a real form or CRM.",
+        "height": 250,
+        "width": 470,
+        "color": 5
+      },
+      "id": "181d58c7-cd27-4eed-930b-aa5eb65fc193",
+      "name": "Template Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -690,
+        -300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "9003143c-a8ae-4c2f-a159-d1b1de4e5fb7",
+      "name": "Run Sample Intake",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4b0864e9-08b7-4ec4-ac2d-54554e3c2d99",
+              "name": "lead_label",
+              "value": "Sample operations team",
+              "type": "string"
+            },
+            {
+              "id": "87bf073b-e2a7-4c48-902d-e59343e02b07",
+              "name": "outcome_clarity",
+              "value": 4,
+              "type": "number"
+            },
+            {
+              "id": "3dbff7b3-3957-4424-b100-46beb0b1eea5",
+              "name": "systems_touched",
+              "value": 3,
+              "type": "number"
+            },
+            {
+              "id": "26db35e4-c988-4b00-8069-bda4364f5301",
+              "name": "external_services",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "394e384a-2f7b-4de6-b02c-03f80f8406ef",
+              "name": "unanswered_questions",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "cf9f8c71-eed4-4f07-938f-d975d2c6db02",
+              "name": "sensitive_data_level",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "eab302af-e865-486a-a6a5-9c43834bd72d",
+              "name": "revision_rounds",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "129b0d6e-afd5-4610-b091-60f2354208a4",
+              "name": "rush_delivery",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c608591a-6bd3-4df9-89d0-6a70c63c9dd2",
+      "name": "Set Sample Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -370,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));\nconst clarity = clamp(input.outcome_clarity, 1, 5);\nconst systems = clamp(input.systems_touched, 1, 6);\nconst external = clamp(input.external_services, 0, 8);\nconst unknowns = clamp(input.unanswered_questions, 0, 6);\nconst sensitive = clamp(input.sensitive_data_level, 0, 3);\nconst revisions = clamp(input.revision_rounds, 1, 5);\nconst rush = input.rush_delivery === true;\n\nconst fitScore = Math.round((clarity / 5) * 55 + Math.max(0, 25 - unknowns * 5) + Math.max(0, 20 - sensitive * 5));\nconst riskScore = Math.min(40, Math.round((5 - clarity) * 3 + (systems - 1) * 2 + external * 2 + unknowns * 3 + sensitive * 4 + (revisions - 1) * 2 + (rush ? 5 : 0)));\n\nlet recommendation = 'Fixed-scope proposal';\nlet nextStep = 'Confirm the stated output, timeline, and acceptance criteria before quoting.';\nlet priceCushion = '0–10%';\n\nif (riskScore >= 24 || clarity <= 2 || unknowns >= 4) {\n  recommendation = 'Paid discovery first';\n  nextStep = 'Resolve the unanswered questions and document the source, output, failure behavior, and change boundary before pricing the build.';\n  priceCushion = '25–40% after discovery';\n} else if (riskScore >= 14) {\n  recommendation = 'Phased proposal';\n  nextStep = 'Quote a small validation milestone first, then price the remaining build from observed data.';\n  priceCushion = '15–25%';\n}\n\nconst questions = [];\nif (clarity < 4) questions.push('What exact output proves the automation worked?');\nif (systems > 2) questions.push('Which system owns the source of truth?');\nif (external > 0) questions.push('What should happen when an outside service times out or returns partial data?');\nif (unknowns > 0) questions.push('Which assumptions still need a sample, API response, or owner decision?');\nif (sensitive > 0) questions.push('Can the first test use redacted or non-production data?');\nif (revisions > 2) questions.push('Which changes require a new estimate instead of another revision?');\n\nreturn [{\n  json: {\n    lead_label: String(input.lead_label || 'Unlabeled lead'),\n    fit_score: Math.min(100, Math.max(0, fitScore)),\n    delivery_risk_score: riskScore,\n    recommendation,\n    price_cushion: priceCushion,\n    next_step: nextStep,\n    questions_to_ask: questions.length ? questions : ['Confirm the deadline and final approval owner.'],\n    explanation: `Risk reflects ${systems} system(s), ${external} outside service(s), ${unknowns} unanswered question(s), and sensitive-data level ${sensitive}.`\n  }\n}];"
+      },
+      "id": "cc9278ca-5b15-4d75-8a33-e94ba16396b4",
+      "name": "Score Fit and Delivery Risk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        60
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "9216aaec-dd82-4052-8851-e9e47555ab6a",
+      "name": "Sales Recommendation",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        190,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($input.first().json?.error?.message || $input.first().json?.message || 'The intake values could not be scored.');\nreturn [{ json: { status: 'needs_review', message: raw.slice(0, 180), next_step: 'Check that every scoring field is a number within the range shown in the sticky note.' } }];"
+      },
+      "id": "a5022bce-0885-4202-9a19-263191ea69c3",
+      "name": "Create Safe Review Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        190,
+        150
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "613e5c26-0f5f-4ba5-a0b5-7f935adf00cd",
+      "name": "Review Required",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        470,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Adapt it safely\n1. Map a form or CRM record into **Set Sample Lead**.\n2. Keep the numeric ranges shown in the sample.\n3. Tune weights only with evidence from completed projects.\n4. Send the recommendation to a CRM, proposal draft, or private team channel.\n5. Do not treat the score as approval to access systems, accept legal terms, or promise delivery.\n6. Never include passwords, API keys, payment data, or private client records in a public template.",
+        "height": 290,
+        "width": 470,
+        "color": 4
+      },
+      "id": "bd51a868-b6d7-482b-a24a-3e93d4c74edf",
+      "name": "Production Checklist",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -330
+      ]
+    }
+  ],
+  "connections": {
+    "Run Sample Intake": {
+      "main": [
+        [
+          {
+            "node": "Set Sample Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Sample Lead": {
+      "main": [
+        [
+          {
+            "node": "Score Fit and Delivery Risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Fit and Delivery Risk": {
+      "main": [
+        [
+          {
+            "node": "Sales Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Safe Review Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Safe Review Record": {
+      "main": [
+        [
+          {
+            "node": "Review Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "408291aa-927a-44c7-b283-8bbd3953ae4a",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "tags": []
+}
