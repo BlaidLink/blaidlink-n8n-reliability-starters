@@ -2,6 +2,10 @@
 
 Three credential-free n8n workflow templates for testing reliable automation patterns before connecting production systems.
 
+[Download all three workflows](https://github.com/ryanluriea/blaidlink-n8n-reliability-starters/releases/download/v1.0.0/blaidlink-n8n-reliability-starters-v1.0.0.zip) · [View the release notes](https://github.com/ryanluriea/blaidlink-n8n-reliability-starters/releases/tag/v1.0.0)
+
+No account, API key, or paid service is required to run the included examples. Download the ZIP for direct n8n imports, or choose **Use this template** on GitHub to copy the complete repository into your own account.
+
 ## Included workflows
 
 ### Resilient REST API Sync
