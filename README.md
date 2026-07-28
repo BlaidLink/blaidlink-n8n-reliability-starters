@@ -4,6 +4,8 @@ Three credential-free n8n workflow templates for testing reliable automation pat
 
 [Download all three workflows](https://github.com/BlaidLink/blaidlink-n8n-reliability-starters/releases/download/v1.0.1/blaidlink-n8n-reliability-starters-v1.0.1.zip) · [View the release notes](https://github.com/BlaidLink/blaidlink-n8n-reliability-starters/releases/tag/v1.0.1)
 
+Already have a broken or unreliable workflow? [Get a fixed-scope n8n, Make, or Zapier audit](https://www.fiverr.com/blaidlink/audit-troubleshoot-and-fix-your-n8n-make-or-zapier-workflow?utm_source=github&utm_medium=repository&utm_campaign=n8n_reliability&utm_content=readme_top_service).
+
 No account, API key, or paid service is required to run the included examples. Download the ZIP for direct n8n imports, or choose **Use this template** on GitHub to copy the complete repository into your own account.
 
 ## Included workflows
