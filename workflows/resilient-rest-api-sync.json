@@ -6,9 +6,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Resilient REST API Sync\nA credential-free teaching template for safer API ingestion.\n\n**Pattern:** configure → fetch with retries → normalize and validate → emit a clear success or sanitized failure record.\n\nThe default endpoint is JSONPlaceholder test data. Replace it only after the demo succeeds.",
-        "height": 240,
-        "width": 430,
+        "content": "## Resilient REST API Sync\nUse this workflow when an automation must pull records from a REST API without failing silently.\n\n**What it demonstrates:** bounded retries, a 10-second timeout, required-field validation, and a credential-safe failure record.\n\nRun the included JSONPlaceholder demo first. Then follow the production checklist before connecting a real system.",
+        "height": 250,
+        "width": 480,
         "color": 5
       },
       "id": "4b62a70f-e30f-4f72-91ef-e3aa06f88200",
@@ -17,7 +17,71 @@
       "typeVersion": 1,
       "position": [
         -760,
-        -260
+        -380
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 1 · Configure and run the safe demo\nClick **Run Demo**. The configuration node supplies a public test endpoint and the required fields `id,name,email`.\n\n**Expected input:** no credentials or manual data.\n**Expected result:** ten sample user records continue to the fetch step.",
+        "height": 210,
+        "width": 470,
+        "color": 3
+      },
+      "id": "73a6651f-42d2-4a91-991b-8a67d9750db7",
+      "name": "Step 1 Configure Demo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 2 · Fetch with bounded retries\nThe HTTP request waits up to 10 seconds and retries failed calls 3 times with a 3-second delay.\n\n**Success output:** API records.\n**Error output:** routes to the sanitized failure path instead of stopping silently.",
+        "height": 210,
+        "width": 230,
+        "color": 6
+      },
+      "id": "e2191158-4703-460d-8b0b-b5057d884b85",
+      "name": "Step 2 Fetch Safely",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -230,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 3A · Normalize and validate success\nThe Code node accepts an array or individual items, normalizes names and email addresses, and checks every configured required field.\n\n**Use this output:** connect **Validated Records** to the database, spreadsheet, or app that should receive reviewed records.",
+        "height": 210,
+        "width": 500,
+        "color": 4
+      },
+      "id": "d2037abc-bb15-4724-bdc3-59c77667e100",
+      "name": "Step 3A Validate Success",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        30,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 3B · Emit a safe failure record\nRequest errors and validation exceptions land here. The Code node removes common credential patterns, limits the message to 240 characters, and returns a retryable failure record with a next step.\n\n**Use this output:** connect **Failure Record** to a private log or alert channel.",
+        "height": 220,
+        "width": 500,
+        "color": 2
+      },
+      "id": "11ae143e-dfb5-4dfe-9214-e55cf3c06fc6",
+      "name": "Step 3B Sanitize Failure",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        30,
+        140
       ]
     },
     {
@@ -136,9 +200,9 @@
     },
     {
       "parameters": {
-        "content": "### Production checklist\n1. Replace the test URL.\n2. Select a real n8n credential instead of placing secrets in the URL or workflow JSON.\n3. Adjust the required fields in the validation Code node.\n4. Route **Validated Records** to your database or app.\n5. Route **Failure Record** to a private log/alert.\n6. Assign a separate Error Workflow for failures outside this handled API call.",
-        "height": 260,
-        "width": 430,
+        "content": "### Before using real data\n1. Replace the public test URL with the production endpoint.\n2. Select an n8n credential in the HTTP Request node—never paste secrets into the URL or exported JSON.\n3. Set `required_fields` to the fields your downstream system needs.\n4. Test both outputs: a valid response and a deliberate bad URL.\n5. Connect **Validated Records** to the destination and **Failure Record** to a private log or alert.\n6. Add a separate Error Workflow for failures outside this handled API call.",
+        "height": 280,
+        "width": 520,
         "color": 4
       },
       "id": "9848a6b2-7e5e-4c02-bd8a-e66ef79e87ed",
@@ -146,8 +210,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        50,
-        -330
+        40,
+        -390
       ]
     }
   ],
